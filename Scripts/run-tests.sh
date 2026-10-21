@@ -330,7 +330,27 @@ run fallback-test          Tinycast/Features/Launcher/Model/Fallback.swift \
 run dictionary-test        Tinycast/Features/Dictionary/Model/DictionaryEntry.swift \
                            Tinycast/Features/Dictionary/Model/DictionaryMarkup.swift
 run dictation-test         Tinycast/Features/Dictation/Model/DictationModel.swift Tinycast/Features/Dictation/Model/DictationIdleRelease.swift Tinycast/Features/Dictation/Model/DictationLanguage.swift Tinycast/Features/Dictation/Model/DictationTextFormatter.swift
+run dictation-online-test  Tinycast/Features/Dictation/Model/DictationProfile.swift \
+                           Tinycast/Features/Dictation/Service/DictationAudioEncoder.swift \
+                           Tinycast/Features/Dictation/Service/DictationOnlineService.swift \
+                           Tinycast/Features/Dictation/Service/DictationProfileStore.swift \
+                           Tinycast/Features/Settings/AppSettingsKey.swift \
+                           Tinycast/Platform/KeychainSecretStore.swift \
+                           Tinycast/Features/AI/Model/AIThinkTagDecoder.swift \
+                           Tinycast/Features/AI/Model/AIRequest.swift \
+                           Tinycast/Features/AI/Model/AITool.swift \
+                           Tinycast/Features/AI/Model/JSONValue.swift
 run dictation-field-test   Tinycast/Features/Dictation/Model/DictationModel.swift \
+                           Tinycast/Features/Dictation/Model/DictationProfile.swift \
+                           Tinycast/Features/Dictation/Service/DictationProfileStore.swift \
+                           Tinycast/Features/Dictation/Service/DictationOnlineService.swift \
+                           Tinycast/Features/Dictation/Service/DictationAudioEncoder.swift \
+                           Tinycast/Features/Settings/AppSettingsKey.swift \
+                           Tinycast/Platform/KeychainSecretStore.swift \
+                           Tinycast/Features/AI/Model/AIThinkTagDecoder.swift \
+                           Tinycast/Features/AI/Model/AIRequest.swift \
+                           Tinycast/Features/AI/Model/AITool.swift \
+                           Tinycast/Features/AI/Model/JSONValue.swift \
                            Tinycast/Features/Dictation/Model/DictationAudioChunks.swift \
                            Tinycast/Features/Dictation/Model/DictationMode.swift \
                            Tinycast/Features/Dictation/Model/DictationDestination.swift \

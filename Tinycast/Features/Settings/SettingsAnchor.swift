@@ -60,8 +60,7 @@ extension SettingsAnchor {
 
     static let dictationDictation = Self(tab: .dictation, title: "Dictation")
     static let dictationCommands = Self(tab: .dictation, title: "Commands")
-    static let dictationModel = Self(tab: .dictation, title: "Model")
-    static let dictationMemory = Self(tab: .dictation, title: "Memory")
+    static let dictationProfiles = Self(tab: .dictation, title: "Profiles")
     static let dictationOutput = Self(tab: .dictation, title: "Output")
 
     static let fileSearchFileSearch = Self(tab: .fileSearch, title: "File Search")

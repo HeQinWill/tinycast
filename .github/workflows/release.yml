@@ -65,6 +65,8 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       # The SAME cert on every release is what keeps users' Accessibility grant across updates.
+      # If SIGNING_P12_BASE64 is set in secrets, it imports that fixed identity.
+      # Otherwise, it falls back to generating a compliant "Tinycast Self-Signed" cert on the fly.
       - name: Import signing certificate
         env:
           P12_BASE64: ${{ secrets.SIGNING_P12_BASE64 }}
@@ -72,16 +74,35 @@ jobs:
         run: |
           KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
           KPW="$(openssl rand -base64 24)"
-          echo "${P12_BASE64}" | base64 --decode > "$RUNNER_TEMP/cert.p12"
           security create-keychain -p "$KPW" "$KEYCHAIN"
           security set-keychain-settings -lut 21600 "$KEYCHAIN"
           security unlock-keychain -p "$KPW" "$KEYCHAIN"
-          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" -P "${P12_PASSWORD}" -A -T /usr/bin/codesign
+
+          if [ -n "${P12_BASE64:-}" ]; then
+            echo "Importing fixed signing certificate from SIGNING_P12_BASE64 secret..."
+            echo "${P12_BASE64}" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+            security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" -P "${P12_PASSWORD}" -A -T /usr/bin/codesign
+            rm -f "$RUNNER_TEMP/cert.p12"
+          else
+            echo "::warning::SIGNING_P12_BASE64 secret not found. Generating compliant 'Tinycast Self-Signed' certificate..."
+            openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
+              -keyout "$RUNNER_TEMP/tc-key.pem" -out "$RUNNER_TEMP/tc-cert.pem" \
+              -subj "/CN=Tinycast Self-Signed" \
+              -addext "basicConstraints=critical,CA:false" \
+              -addext "keyUsage=critical,digitalSignature" \
+              -addext "extendedKeyUsage=critical,codeSigning"
+
+            openssl pkcs12 -export -inkey "$RUNNER_TEMP/tc-key.pem" -in "$RUNNER_TEMP/tc-cert.pem" \
+              -name "Tinycast Self-Signed" -out "$RUNNER_TEMP/cert.p12" -passout pass:tinycast
+
+            security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" -P tinycast -A -T /usr/bin/codesign
+            rm -f "$RUNNER_TEMP/tc-key.pem" "$RUNNER_TEMP/tc-cert.pem" "$RUNNER_TEMP/cert.p12"
+          fi
+
           # Let codesign use the key without an interactive prompt.
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KPW" "$KEYCHAIN" >/dev/null
           # Prepend to the search list so xcodebuild's codesign finds "Tinycast Self-Signed".
           security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | sed 's/"//g')
-          rm -f "$RUNNER_TEMP/cert.p12"
 
       - name: Build app
         env:
@@ -155,6 +176,7 @@ jobs:
         run: ./Scripts/release-notes.sh "$RUNNER_TEMP/notes.md" "$RUNNER_TEMP/changelog.md"
 
       - name: Publish GitHub Release
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

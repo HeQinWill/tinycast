@@ -112,6 +112,8 @@ enum AppSettingsKey: String, CaseIterable {
     case dictationLiveInsertion = "dictationLiveInsertion"
     case dictationIdleRelease = "dictationIdleReleaseMinutes"
     case dictationLanguage = "dictationLanguage"
+    case dictationProfiles = "dictationProfiles"
+    case dictationActiveProfileID = "dictationActiveProfileID"
     case supportReminders = "supportReminders"
     case settingsFileEnabled = "settingsFileEnabled"
 }

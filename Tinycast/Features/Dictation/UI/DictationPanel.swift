@@ -8,6 +8,8 @@ final class DictationDisplayState {
     enum Phase { case listening, transcribing }
     var phase: Phase = .listening
     var levels = [Float](repeating: 0, count: DictationSpectrum.barCount)
+    var profileName: String = ""
+    var onCycleProfile: (() -> Void)?
 }
 
 private struct DictationWaveform: View {
@@ -54,7 +56,7 @@ private struct DictationPanelView: View {
     let state: DictationDisplayState
 
     var body: some View {
-        Group {
+        HStack(alignment: .center, spacing: Theme.Spacing.md) {
             if state.phase == .listening {
                 DictationWaveform(
                     levels: state.levels.enumerated().map { index, level in
@@ -68,8 +70,34 @@ private struct DictationPanelView: View {
                 DictationProcessingWave()
                     .accessibilityLabel("Transcribing dictation")
             }
+
+            if !state.profileName.isEmpty {
+                Button(action: {
+                    guard state.phase == .listening else { return }
+                    state.onCycleProfile?()
+                }) {
+                    HStack(spacing: 3) {
+                        Text(state.profileName)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Theme.Colors.textPrimary)
+                            .lineLimit(1)
+                        if state.phase == .listening {
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.system(size: 8, weight: .semibold))
+                                .foregroundStyle(Theme.Colors.textSecondary)
+                        }
+                    }
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(Theme.Colors.fillSecondary, in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .disabled(state.phase != .listening)
+                .accessibilityLabel("Switch dictation profile, currently \(state.profileName)")
+            }
         }
-        .frame(width: Theme.Size.dictationPanel.width, height: Theme.Size.dictationPanel.height)
+        .padding(.horizontal, Theme.Spacing.lg)
+        .frame(height: Theme.Size.dictationPanel.height)
         .glassEffect(.regular, in: .capsule)
     }
 }
@@ -77,10 +105,12 @@ private struct DictationPanelView: View {
 private final class DictationPanel: NSPanel {
     var onAccept: (() -> Void)?
     var onCancel: (() -> Void)?
+    var onNextProfile: (() -> Void)?
+    var onPreviousProfile: (() -> Void)?
 
     init(content: NSView) {
         super.init(
-            contentRect: NSRect(origin: .zero, size: Theme.Size.dictationPanel),
+            contentRect: NSRect(x: 0, y: 0, width: 220, height: Theme.Size.dictationPanel.height),
             styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         contentView = content
         isOpaque = false
@@ -101,6 +131,8 @@ private final class DictationPanel: NSPanel {
             switch Int(event.keyCode) {
             case kVK_Return, kVK_ANSI_KeypadEnter: onAccept?(); return
             case kVK_Escape: onCancel?(); return
+            case kVK_UpArrow: onPreviousProfile?(); return
+            case kVK_DownArrow: onNextProfile?(); return
             default: break
             }
         }
@@ -114,20 +146,33 @@ final class DictationPanelController {
     private var panel: DictationPanel?
     var onAccept: (() -> Void)?
     var onCancel: (() -> Void)?
+    var onNextProfile: (() -> Void)?
+    var onPreviousProfile: (() -> Void)?
 
-    func show() {
+    func show(profileName: String = "") {
+        state.profileName = profileName
+        state.onCycleProfile = { [weak self] in self?.onNextProfile?() }
         let screen = NSScreen.main ?? NSScreen.screens.first
         guard let frame = screen?.visibleFrame else { return }
         let panel =
             panel ?? DictationPanel(content: NSHostingView(rootView: DictationPanelView(state: state)))
         panel.onAccept = onAccept
         panel.onCancel = onCancel
+        panel.onNextProfile = { [weak self] in
+            guard self?.state.phase == .listening else { return }
+            self?.onNextProfile?()
+        }
+        panel.onPreviousProfile = { [weak self] in
+            guard self?.state.phase == .listening else { return }
+            self?.onPreviousProfile?()
+        }
         self.panel = panel
-        let size = Theme.Size.dictationPanel
+        let panelWidth: CGFloat = profileName.isEmpty ? 144 : 220
+        panel.setContentSize(NSSize(width: panelWidth, height: Theme.Size.dictationPanel.height))
         panel.setFrameOrigin(
             NSPoint(
-                x: frame.midX - size.width / 2,
-                y: frame.minY + frame.height * 0.1 - size.height / 2))
+                x: frame.midX - panelWidth / 2,
+                y: frame.minY + frame.height * 0.1 - Theme.Size.dictationPanel.height / 2))
         state.phase = .listening
         state.levels = [Float](repeating: 0, count: DictationSpectrum.barCount)
         panel.makeKeyAndOrderFront(nil)

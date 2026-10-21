@@ -91,6 +91,10 @@ enum SettingsBackupCoverage {
             "Dictation preferences stay local until backup supports them.",
         AppSettingsKey.dictationIdleRelease.rawValue:
             "Dictation memory use stays a device-local preference.",
+        AppSettingsKey.dictationProfiles.rawValue:
+            "Dictation profiles stay on the Mac with the Keychain credentials they describe.",
+        AppSettingsKey.dictationActiveProfileID.rawValue:
+            "The active profile selection stays local to this Mac.",
         AppSettingsKey.clipboardTextSearchEnabled.rawValue:
             "Background OCR is an opt-in processing choice on this Mac; a backup must not enable it.",
         AppSettingsKey.snippetsEnabled.rawValue:

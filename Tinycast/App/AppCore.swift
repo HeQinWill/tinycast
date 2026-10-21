@@ -26,8 +26,8 @@ final class AppCore {
     let textInjector: TextInjector
     let hotKeys = HotKeyManager()
     let dictationAudioDucker = DictationAudioDucker()
-    @ObservationIgnored private(set) lazy var dictationModels =
-        DictationModelStore(idleRelease: settings.dictationIdleRelease)
+    @ObservationIgnored private(set) lazy var dictationProfiles = DictationProfileStore()
+    @ObservationIgnored private(set) lazy var dictationOnlineService = DictationOnlineService()
     @ObservationIgnored private(set) lazy var hyperKey = HyperKeyManager(
         settings: settings, hotKeys: hotKeys)
     @ObservationIgnored private lazy var dictationKey = DictationKeyManager(hotKeys: hotKeys)
@@ -93,7 +93,8 @@ final class AppCore {
         palette: palette,
         showMessage: { [unowned self] in self.showMessage($0, tone: $1) }, core: self)
     @ObservationIgnored private(set) lazy var dictationCoordinator = DictationCoordinator(
-        settings: settings, hotKeys: hotKeys, models: dictationModels, injector: textInjector,
+        settings: settings, hotKeys: hotKeys, profiles: dictationProfiles,
+        onlineService: dictationOnlineService, injector: textInjector,
         audioDucker: dictationAudioDucker,
         confirmEnable: { [unowned self] in
             await self.confirm(
@@ -101,7 +102,7 @@ final class AppCore {
                 message: String(
                     localized: """
                         Tinycast needs microphone access for dictation and Accessibility to paste into \
-                        other apps. Audio is processed on this Mac.
+                        other apps. Audio is transcribed via your configured online endpoint.
                         """),
                 symbol: "waveform", confirmTitle: String(localized: "Continue"), tone: .neutral,
                 confirmRole: .standard)
@@ -526,7 +527,6 @@ final class AppCore {
         if settings.dictationEnabled { dictationCoordinator.prepareForTermination() }
         dictationAudioDucker.restoreImmediately()
         await dictationAudioDucker.waitForTransition()
-        await dictationModels.stop()
     }
 
     /// Idempotent: both switches are tracked, and either one flipping re-runs the whole decision.
@@ -693,11 +693,6 @@ final class AppCore {
             })
         track({ _ = $0.notesEnabled }, reproject: { $0.notesCoordinator.applyEnabled() })
         track({ _ = $0.aiEnabled }, reproject: { $0.aiChatCoordinator.applyEnabled() })
-        track(
-            { _ = $0.dictationIdleRelease },
-            reproject: {
-                $0.dictationModels.setIdleRelease($0.settings.dictationIdleRelease)
-            })
         track(
             {
                 _ = $0.dictationEnabled

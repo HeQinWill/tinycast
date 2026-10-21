@@ -339,14 +339,12 @@ enum SettingsSearchCatalog {
         .init(.dictationDictation, "Enable Dictation"),
         .init(.dictationCommands, "Shortcut behavior"),
         .init(.dictationCommands, "Shortcut"),
-        .init(.dictationModel, "Model"),
-        .init(.dictationModel, "Engine", keywords: ["parakeet", "redux", "ultra", "qwen"]),
-        .init(.dictationModel, "Language"),
-        .init(.dictationMemory, "Release model from memory"),
+        .init(
+            group: .dictationProfiles, "Profiles",
+            keywords: ["model", "multimodal", "llm", "endpoint", "api key"]),
         .init(.dictationOutput, "Microphone"),
         .init(.dictationOutput, "When finished"),
-        .init(.dictationOutput, "Adapt capitalization", keywords: ["uppercase", "lowercase", "sentence"]),
-        .init(.dictationOutput, "Insert while recording", keywords: ["live", "streaming", "chunk", "pause"])
+        .init(.dictationOutput, "Adapt capitalization", keywords: ["uppercase", "lowercase", "sentence"])
     ]
 
     private static let fileSearch: [SettingsSearchEntry] = [

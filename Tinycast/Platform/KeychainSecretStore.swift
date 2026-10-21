@@ -13,6 +13,7 @@ struct KeychainSecretStore: Sendable {
     static let aiAPIKeys = KeychainSecretStore(scope: "ai-api-keys")
     static let mcpSecrets = KeychainSecretStore(scope: "mcp-secrets")
     static let installedAIEnvironment = KeychainSecretStore(scope: "installed-ai-environment")
+    static let dictationAPIKeys = KeychainSecretStore(scope: "dictation-api-keys")
 
     init(scope: String, bundleIdentifier: String? = Bundle.main.bundleIdentifier) {
         service = "\(bundleIdentifier ?? "com.tinycast.app").\(scope)"

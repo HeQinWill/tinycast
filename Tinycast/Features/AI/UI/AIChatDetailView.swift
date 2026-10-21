@@ -370,7 +370,7 @@ private struct DictationButton: View {
         let field = dictation.field
         let session = field?.editor == editor.textView.map(ObjectIdentifier.init) ? field : nil
         Button {
-            guard dictation.hasModel else { return onNeedsModel() }
+            guard dictation.hasProfile else { return onNeedsModel() }
             if let textView = editor.textView { dictation.toggle(into: textView) }
         } label: {
             Group {
@@ -396,8 +396,8 @@ private struct DictationButton: View {
     }
 
     private func help(_ session: DictationField?) -> String {
-        guard dictation.hasModel else {
-            return String(localized: "Download a dictation model in Settings")
+        guard dictation.hasProfile else {
+            return String(localized: "Configure a dictation profile in Settings")
         }
         guard let session else { return String(localized: "Dictate") }
         return session.isTranscribing
