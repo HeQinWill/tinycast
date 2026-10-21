@@ -92,7 +92,11 @@ jobs:
               -addext "keyUsage=critical,digitalSignature" \
               -addext "extendedKeyUsage=critical,codeSigning"
 
-            openssl pkcs12 -export -inkey "$RUNNER_TEMP/tc-key.pem" -in "$RUNNER_TEMP/tc-cert.pem" \
+            LEGACY_FLAG=""
+            if openssl pkcs12 -help 2>&1 | grep -q -- -legacy; then
+              LEGACY_FLAG="-legacy"
+            fi
+            openssl pkcs12 -export $LEGACY_FLAG -inkey "$RUNNER_TEMP/tc-key.pem" -in "$RUNNER_TEMP/tc-cert.pem" \
               -name "Tinycast Self-Signed" -out "$RUNNER_TEMP/cert.p12" -passout pass:tinycast
 
             security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" -P tinycast -A -T /usr/bin/codesign
